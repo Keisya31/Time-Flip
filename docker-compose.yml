@@ -1,0 +1,69 @@
+services:
+  app:
+    build: .
+    image: countdown
+    container_name: countdown
+    ports:
+      - "8006:8000"
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: app
+    working_dir: /var/www/countdown
+    volumes:
+      - .:/var/www/countdown
+      - ./storage/php.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+       - countdown
+
+  webserver:
+    image: nginx:latest
+    container_name: nginxlaraveldocker_countdown
+    restart: unless-stopped
+    tty: true
+    ports:
+     - "2026:80"
+    volumes:
+    - .:/var/www/repota-skripsi
+    - ./nginx/app.conf:/etc/nginx/conf.d/app.conf
+    networks:
+      - countdown
+
+  db:
+    image: mysql:latest
+    container_name: dblaraveldocker_countdown
+    restart: always
+    tty: true
+    ports:
+      - "3309:3306"
+    volumes:
+      - lbdata:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: root
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    networks:
+      - countdown
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: pmalaraveldocker_countdown
+    links:
+      - db
+    restart: always
+    ports:
+      - 7003:80 
+    networks:
+      - countdown
+
+networks:
+  countdown:
+    driver: bridge
+
+volumes:
+  lbdata:
+    driver: local
